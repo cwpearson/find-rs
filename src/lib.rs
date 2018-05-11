@@ -92,6 +92,14 @@ impl Find {
         self
     }
 
+        // Search a glob pattern
+    pub fn search_globs(&mut self, patterns: &[&str]) -> &mut Find {
+        for pattern in patterns {
+            self.patterns.push(pattern.to_owned().to_owned());
+        }
+        self
+    }
+
     // Do the search
     pub fn execute(&self) -> Result<PathBuf> {
         /// Searches the supplied directory and, on Windows, any relevant sibling directories.
@@ -123,14 +131,14 @@ impl Find {
 
         // Search the backup directories.
         for pattern in &self.patterns {
-            eprintln!("Searching for {}", pattern);
+            // eprintln!("Searching for {}", pattern);
             let mut options = MatchOptions::new();
             options.case_sensitive = false;
             options.require_literal_separator = true;
             if let Ok(paths) = glob::glob_with(pattern.as_str(), &options) {
                 for path in paths.filter_map(|r| if let Ok(r) = r { Some(r) } else { None })
                 .filter(|p| p.is_dir()) {
-                    eprintln!("Looking in {:?}", path);
+                    // eprintln!("Looking in {:?}", path);
                     search_directory!(path);
                 }
             }
