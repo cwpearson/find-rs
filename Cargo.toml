@@ -5,3 +5,4 @@ authors = ["Carl Pearson <pearson@illinois.edu>"]
 
 [dependencies]
 regex = "1.0"
+glob = "0.2"
