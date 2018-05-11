@@ -18,6 +18,10 @@ in your Rust file.
 ## Example
 
 ```rust
+    const SEARCH_LINUX: &[&str] = &["/usr/local/cuda/lib*", "/usr/local/cuda*/lib*"];
+
+    // ...
+
     let cudart_path = match Find::new("libcudart.so.*")
         .search_env("LIBCUDA_PATH")
         .search_globs(SEARCH_LINUX)
