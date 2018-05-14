@@ -62,7 +62,7 @@ fn contains(directory: &Path, files: &[String]) -> Option<PathBuf> {
 
 pub struct Find {
     targets: Vec<String>,
-    env: Option<String>,
+    envs: Vec<String>,
     patterns: Vec<String>,
 }
 
@@ -70,7 +70,7 @@ impl Find {
     pub fn new(file: &str) -> Find {
         Find {
             targets: vec![file.to_owned()],
-            env: None,
+            envs: vec![],
             patterns: vec![],
         }
     }
@@ -81,8 +81,22 @@ impl Find {
     }
 
     // Search in a path provided by environment variable
-    pub fn search_env(&mut self, env: &str) -> &mut Find {
-        self.env = Some(env.to_owned());
+    pub fn search_env<T>(&mut self, s: T) -> &mut Find
+    where
+        T: AsRef<str>,
+    {
+        self.envs.push(s.as_ref().to_owned());
+        self
+    }
+
+    // Search in paths provided by environment variables
+    pub fn seach_envs<T>(&mut self, s: &[T]) -> &mut Find
+    where
+        T: AsRef<str>,
+    {
+        for e in s.iter() {
+            self.search_env(e.as_ref());
+        }
         self
     }
 
@@ -92,7 +106,7 @@ impl Find {
         self
     }
 
-        // Search a glob pattern
+    // Search a glob pattern
     pub fn search_globs(&mut self, patterns: &[&str]) -> &mut Find {
         for pattern in patterns {
             self.patterns.push(pattern.to_owned().to_owned());
@@ -123,9 +137,13 @@ impl Find {
     }
 
         // Search the directory provided by the relevant environment variable if it is set.
-        if let &Some( ref env) = &self.env {
-            if let Ok(directory) = env::var(env).map(|d| Path::new(&d).to_path_buf()) {
-                search_directory!(directory);
+        for env in &self.envs {
+            if let Ok(paths) = env::var(env) {
+                let paths = paths.split(":").map(|p| PathBuf::from(p));
+
+                for path in paths {
+                    search_directory!(path);
+                }
             }
         }
 
@@ -136,8 +154,10 @@ impl Find {
             options.case_sensitive = false;
             options.require_literal_separator = true;
             if let Ok(paths) = glob::glob_with(pattern.as_str(), &options) {
-                for path in paths.filter_map(|r| if let Ok(r) = r { Some(r) } else { None })
-                .filter(|p| p.is_dir()) {
+                for path in paths
+                    .filter_map(|r| if let Ok(r) = r { Some(r) } else { None })
+                    .filter(|p| p.is_dir())
+                {
                     // eprintln!("Looking in {:?}", path);
                     search_directory!(path);
                 }
