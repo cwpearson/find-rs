@@ -2,11 +2,11 @@ extern crate glob;
 extern crate regex;
 
 use glob::MatchOptions;
+use regex::Regex;
+use std::env;
+use std::path::{Path, PathBuf};
 use std::result;
 use std::string::String;
-use std::path::{Path, PathBuf};
-use std::env;
-use regex::Regex;
 
 #[cfg(test)]
 mod tests {
@@ -101,15 +101,21 @@ impl Find {
     }
 
     // Search a glob pattern
-    pub fn search_glob(&mut self, pattern: &str) -> &mut Find {
-        self.patterns.push(pattern.to_owned());
+    pub fn search_glob<T>(&mut self, pattern: T) -> &mut Find
+    where
+        T: AsRef<str>,
+    {
+        self.patterns.push(pattern.as_ref().to_owned());
         self
     }
 
     // Search a glob pattern
-    pub fn search_globs(&mut self, patterns: &[&str]) -> &mut Find {
+    pub fn search_globs<T>(&mut self, patterns: &[T]) -> &mut Find
+    where
+        T: AsRef<str>,
+    {
         for pattern in patterns {
-            self.patterns.push(pattern.to_owned().to_owned());
+            self.patterns.push(pattern.as_ref().to_owned());
         }
         self
     }
